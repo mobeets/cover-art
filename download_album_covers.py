@@ -78,7 +78,7 @@ def auth(verifier=None):
             webbrowser.open_new_tab(url)
         else:
             return None
-        verifier = raw_input('Gimme that verifier: ').strip()
+        verifier = raw_input('Gimme that verification code: ').strip()
     access_token, access_secret = d.get_access_token(verifier)
     me = d.identity()
     return d
