@@ -1,5 +1,6 @@
-import time
 import os
+import time
+import glob
 import argparse
 import webbrowser
 import unidecode
@@ -111,26 +112,25 @@ def main(infile, outdir, d):
             except Exception, e:
                 print query
                 print e.__str__()
-                print '    BUG'
+                print '    BUGGIN OUT - might work next time'
                 time.sleep(2)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', type=str, required=True, help='infile')
-    parser.add_argument('-o', type=str, required=True, help='out dir')
-    parser.add_argument('-c', action='store_true', default=False, help='check exist')
+    parser.add_argument('-i', type=str, required=True, help='infile or indir')
+    parser.add_argument('-o', type=str, required=True, help='outdir')
+    parser.add_argument('-c', action='store_true', default=False, help='check images remaining')
     parser.add_argument('--all', action='store_true', default=False, help='download all')
     args = parser.parse_args()
+    infile = os.path.abspath(args.i)
+    outdir = os.path.abspath(args.o)
     d = auth() if not args.c else None
     if args.all:
-        ys = range(2007, 2015)
-        xs = ['albums_{0}.txt'.format(y) for y in ys]
-        for i, o in zip(xs, ys):
-            infile = os.path.abspath(i)
-            outdir = os.path.abspath(str(o))
-            print infile, outdir
-            if not os.path.exists(outdir):
-                os.mkdir(outdir)
-            main(infile, outdir, d)
+        indir = infile
+        for infile in glob.glob(os.path.join(indir, 'albums_*.txt')):
+            yr = os.path.splitext(infile)[0][-4:]
+            od = os.path.join(outdir, yr)
+            print infile, od
+            main(infile, od, d)
     else:
-        main(os.path.abspath(args.i), os.path.abspath(args.o), d)
+        main(indir, outdir, d)
