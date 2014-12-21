@@ -124,16 +124,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
     infile = os.path.abspath(args.i)
     outdir = os.path.abspath(args.o)
-    if not os.path.exists(outdir):
-        os.makedir(outdir)
+    if not args.all and os.path.exists(outdir):
+        os.mkdir(outdir)
     d = auth() if not args.c else None
     if args.all:
         indir = infile
         for infile in glob.glob(os.path.join(indir, 'albums_*.txt')):
-            yr = os.path.splitext(infile)[0].split('_')[1]
+            yr = os.path.splitext(infile)[0].split('_')[2]
             od = os.path.join(outdir, yr)
             if not os.path.exists(od):
-                os.makedir(od)
+                os.mkdir(od)
             print infile, od
             main(infile, od, d)
     else:
