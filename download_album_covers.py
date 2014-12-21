@@ -1,9 +1,12 @@
 import time
-import os.path
+import os
 import argparse
 import webbrowser
 import unidecode
 import discogs_client
+
+DISCOGS_CONSUMER_KEY = os.environ['DISCOGS_CONSUMER_KEY']
+DISCOGS_CONSUMER_SECRET = os.environ['DISCOGS_CONSUMER_SECRET']
 
 def save_image(im_url, d, outfile):
     headers = {
