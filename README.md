@@ -3,16 +3,20 @@
 * Create a Discogs API application [here](https://www.discogs.com/settings/developers).
 * Create environment variables for your consumer key and consumer secret keys. For example:
 
-    $ export DISCOGS_CONSUMER_KEY=asdfasdfasdf
+    ```
+    $ export DISCOGS_CONSUMER_KEY=asdfasdfasdf`
     $ export DISCOGS_CONSUMER_SECRET=asdfasdfasdfsadfasdfasdf
+    ```
 
 * Add files called `albums_X.txt` to the `lists/` directory that look like this:
 
+    ```
     Parts & Labor's "Receivers"
     Ty Segall's "Twins" (2012)
     The Blues Collection Vol. 5: Bo Diddley's "Jungle Music" (1993)
     Kanye West's "Yeezus" (2013)
     Julian Lynch's "Lines" (2013
+    ```
 
 Replace the `X` in `albums_X.txt` with whatever you want the name of the output folder to be.
 
