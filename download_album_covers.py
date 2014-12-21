@@ -5,10 +5,6 @@ import webbrowser
 import unidecode
 import discogs_client
 
-CONSUMER_KEY = 'xsZRfCjOQmGtaiwVczGz'
-CONSUMER_SECRET = 'dDLzQZQNrsEUDXhAHJUhWcfgPSKrIDwf'
-VERIFIER = 'lMWNpWZDfd'
-
 def save_image(im_url, d, outfile):
     headers = {
         'Accept-Encoding': 'gzip',
@@ -70,7 +66,7 @@ def download_album_cover(d, query, outname, outdir):
 
 def auth(verifier=None):
     d = discogs_client.Client('ExampleApplication/0.1')
-    d.set_consumer_key(CONSUMER_KEY, CONSUMER_SECRET)
+    d.set_consumer_key(DISCOGS_CONSUMER_KEY, DISCOGS_CONSUMER_SECRET)
     request_token, request_secret, url = d.get_authorize_url()
     if not verifier:
         print url
