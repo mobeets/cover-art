@@ -133,4 +133,4 @@ if __name__ == '__main__':
             print infile, od
             main(infile, od, d)
     else:
-        main(indir, outdir, d)
+        main(infile, outdir, d)
