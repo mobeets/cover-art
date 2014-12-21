@@ -4,11 +4,11 @@
 * Create environment variables for your consumer key and consumer secret keys. For example:
 
     ```
-    $ export DISCOGS_CONSUMER_KEY=asdfasdfasdf`
+    $ export DISCOGS_CONSUMER_KEY=asdfasdfasdf
     $ export DISCOGS_CONSUMER_SECRET=asdfasdfasdfsadfasdfasdf
     ```
 
-* Add files called `albums_X.txt` to the `lists/` directory that look like this:
+* Add files called `albums_X.txt` to the `lists/` directory that contain a list of albums like this:
 
     ```
     Parts & Labor's "Receivers"
@@ -18,7 +18,7 @@
     Julian Lynch's "Lines" (2013
     ```
 
-Replace the `X` in `albums_X.txt` with whatever you want the name of the output folder to be.
+(The `X` in `albums_X.txt` will send downloaded cover art to a directory called `X`.)
 
 ## Usage
 
