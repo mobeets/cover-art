@@ -124,7 +124,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     infile = os.path.abspath(args.i)
     outdir = os.path.abspath(args.o)
-    if not args.all and os.path.exists(outdir):
+    if not args.all and not os.path.exists(outdir):
         os.mkdir(outdir)
     d = auth() if not args.c else None
     if args.all:
