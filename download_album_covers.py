@@ -1,6 +1,7 @@
 import os
 import time
 import glob
+import urllib
 import argparse
 import webbrowser
 import unidecode
@@ -14,10 +15,14 @@ def save_image(im_url, d, outfile):
         'Accept-Encoding': 'gzip',
         'User-Agent': d.user_agent,
     }
-    content, status_code = d._fetcher.fetch(d, 'GET', im_url, data=None, headers=headers)
-    if 200 <= status_code < 300:
-        with open(outfile, 'w') as f:
-            f.write(content)
+    urllib.urlretrieve(im_url, outfile)
+    # content, status_code = d._fetcher.fetch(d, 'GET', im_url, data=None, headers=headers)
+    # if 200 <= status_code < 300:
+    #     with open(outfile, 'w') as f:
+    #         f.write(content)
+    # else:
+    #     1/0
+    #     print "(I didn't save, but I may say I will.)", status_code
 
 def clean_query(query):
     """
@@ -43,13 +48,20 @@ def get_im_url(d, query):
     for i in xrange(res.count):
         r = res[i]
         if r.__class__.__name__ in ['Release', 'Master']:
-            if hasattr(r, 'images') and r.images:
+            try:
                 return r.images[0]['uri']
-            if hasattr(r, 'master'):
-                if hasattr(r.master, 'images') and r.master.images:
+            except:
+                try:
                     return r.master.images[0]['uri']
-            if hasattr(r, 'thumb'):
-                return r.thumb
+                except:
+                    return r.thumb
+            # if hasattr(r, 'images') and r.images:
+            #     return r.images[0]['uri']
+            # if hasattr(r, 'master'):
+            #     if hasattr(r.master, 'images') and r.master.images:
+            #         return r.master.images[0]['uri']
+            # if hasattr(r, 'thumb'):
+            #     return r.thumb
     return None
 
 def already_exists(query, outdir):
@@ -107,6 +119,7 @@ def main(infile, outdir, d):
         elif d is None:
             print outname
         else:
+            # download_album_cover(d, query, outname, outdir)
             try:
                 download_album_cover(d, query, outname, outdir)
             except Exception, e:

@@ -15,7 +15,7 @@
     Ty Segall's "Twins" (2012)
     The Blues Collection Vol. 5: Bo Diddley's "Jungle Music" (1993)
     Kanye West's "Yeezus" (2013)
-    Julian Lynch's "Lines" (2013
+    Julian Lynch's "Lines" (2013)
     ```
 
 (The `X` in `albums_X.txt` will send downloaded cover art to a directory called `X`.)
