@@ -74,6 +74,7 @@ def download_album_cover(d, query, outname, outdir):
         print '    NOT FOUND'
         return
     ext = os.path.splitext(im_url)[1]
+    ext = ext.replace('jpg', 'jpeg')
     # ext = '.png'
     outfile = os.path.join(outdir, outname + ext)
     save_image(im_url, d, outfile)
