@@ -3,14 +3,19 @@ import time
 import glob
 import urllib
 import argparse
-import webbrowser
 import unidecode
+import webbrowser
+import collections
 import discogs_client
+from imdb import IMDb
+from goodreads import client as gr_client
 
 DISCOGS_CONSUMER_KEY = os.environ['DISCOGS_CONSUMER_KEY']
 DISCOGS_CONSUMER_SECRET = os.environ['DISCOGS_CONSUMER_SECRET']
+GOODREADS_KEY = os.environ['GOODREADS_KEY']
+GOODREADS_SECRET = os.environ['GOODREADS_SECRET']
 
-def save_image(im_url, d, outfile):
+def save_image_album(im_url, d, outfile):
     headers = {
         'Accept-Encoding': 'gzip',
         'User-Agent': d.user_agent,
@@ -23,6 +28,18 @@ def save_image(im_url, d, outfile):
     # else:
     #     1/0
     #     print "(I didn't save, but I may say I will.)", status_code
+
+def save_image(im_url, d, outfile):
+    if hasattr(d, 'user_agent'):
+        return save_image_album(im_url, d, outfile)
+    urlObj = urllib.urlopen(im_url)
+    imageData = urlObj.read()
+    urlObj.close()
+    with open(outfile, 'wb') as f:
+        f.write(imageData)
+
+def make_filename(query):
+    return query.replace('.', '_').replace('/', '_').replace(':', '-')
 
 def clean_query(query):
     """
@@ -41,9 +58,9 @@ def clean_query(query):
     if year_str.startswith('(') and year_str.endswith(')'):
         query = query[:-6]
     query = query.strip()
-    return query, query.replace('.', '_').replace('/', '_')
+    return query
 
-def get_im_url(d, query):
+def get_im_url_album(d, query):
     res = d.search(query, type='title')
     for i in xrange(res.count):
         r = res[i]
@@ -64,11 +81,40 @@ def get_im_url(d, query):
             #     return r.thumb
     return None
 
+def get_im_url_book(d, query, page=1, search_field='all'):
+    """
+    source: https://github.com/sefakilic/goodreads/blob/master/goodreads/client.py
+    """
+    resp = d.request("search/index.xml",
+        {'q': query, 'page': page, 'search[field]': search_field})
+    res = resp['search']['results']
+    if res is None:
+        return []
+    works = res['work']
+    # If there's only one work returned, put it in a list.
+    if type(works) == collections.OrderedDict:
+        works = [works]
+    qs = [d.book(work['best_book']['id']['#text']) for work in works]
+    if len(qs) == 0:
+        return None
+    q = max(qs[:4], key=lambda q: int(q.text_reviews_count))
+    return q.image_url
+
+def get_im_url_film(d, query):
+    ms = d.search_movie(query)
+    m = d.get_movie(ms[0].movieID)
+    return m['cover url']
+
 def already_exists(query, outdir):
     return any([os.path.splitext(x)[0] == query for x in os.listdir(outdir)])
 
-def download_album_cover(d, query, outname, outdir):
-    im_url = get_im_url(d, query)
+def find_and_download_image(d, query, outname, outdir, kind):
+    if kind == "album":
+        im_url = get_im_url_album(d, query)
+    elif kind == "film":
+        im_url = get_im_url_film(d, query)
+    elif kind == "book":
+        im_url = get_im_url_book(d, query)
     if im_url is None:
         print query
         print '    NOT FOUND'
@@ -81,7 +127,13 @@ def download_album_cover(d, query, outname, outdir):
     print query
     print '    Saved {0}'.format(outfile)
 
-def auth(verifier=None):
+def imdb_auth():
+    return IMDb('http')
+
+def goodreads_auth():
+    return gr_client.GoodreadsClient(GOODREADS_KEY, GOODREADS_SECRET)
+
+def dicogs_auth(verifier=None):
     d = discogs_client.Client('ExampleApplication/0.1')
     d.set_consumer_key(DISCOGS_CONSUMER_KEY, DISCOGS_CONSUMER_SECRET)
     request_token, request_secret, url = d.get_authorize_url()
@@ -111,18 +163,21 @@ def load(infile):
         out = unidecode.unidecode(f.read())
         return out.split('-----')[0] # keep everything before -----
 
-def main(infile, outdir, d):
+def main(infile, outdir, d, kind):
     lines = parse(load(infile))
     for line in lines:
-        query, outname = clean_query(line)
+        if kind != "film":
+            query = clean_query(line)
+        else:
+            query = line
+        outname = make_filename(query)
         if already_exists(outname, outdir):
             pass
         elif d is None:
             print outname
         else:
-            # download_album_cover(d, query, outname, outdir)
             try:
-                download_album_cover(d, query, outname, outdir)
+                find_and_download_image(d, query, outname, outdir, kind)
             except Exception, e:
                 print query
                 print e.__str__()
@@ -133,6 +188,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', type=str, required=True, help='infile or indir')
     parser.add_argument('-o', type=str, required=True, help='outdir')
+    parser.add_argument('--type', type=str, default="album", choices=("album", "film", "book"), help='type of image to search for')
     parser.add_argument('-c', action='store_true', default=False, help='check images remaining')
     parser.add_argument('--all', action='store_true', default=False, help='download all')
     args = parser.parse_args()
@@ -140,15 +196,22 @@ if __name__ == '__main__':
     outdir = os.path.abspath(args.o)
     if not args.all and not os.path.exists(outdir):
         os.mkdir(outdir)
-    d = auth() if not args.c else None
-    if args.all:
+    if args.type == "album" and not args.c:
+        d = dicogs_auth()
+    elif args.type == "book" and not args.c:
+        d = goodreads_auth()
+    elif args.type == "film" and not args.c:
+        d = imdb_auth()
+    else:
+        d = None
+    if args.all: # all files like [type]_*.txt
         indir = infile
-        for infile in glob.glob(os.path.join(indir, 'albums_*.txt')):
+        for infile in glob.glob(os.path.join(indir, args.type + 's_*.txt')):
             yr = os.path.splitext(infile)[0].split('_')[2]
             od = os.path.join(outdir, yr)
             if not os.path.exists(od):
                 os.mkdir(od)
             print infile, od
-            main(infile, od, d)
+            main(infile, od, d, args.type)
     else:
-        main(infile, outdir, d)
+        main(infile, outdir, d, args.type)
