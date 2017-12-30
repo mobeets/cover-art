@@ -61,10 +61,12 @@ def clean_query(query):
     return query
 
 def get_im_url_album(d, query):
-    res = d.search(query, type='title')
-    for i in xrange(res.count):
-        r = res[i]
+    for r in d.search(query): # had problems with adding type='title'
         if r.__class__.__name__ in ['Release', 'Master']:
+            if r.images:
+                return r.images[0]['uri']
+            else:
+                return None
             try:
                 return r.images[0]['uri']
             except:
@@ -103,6 +105,7 @@ def get_im_url_book(d, query, page=1, search_field='all'):
 def get_im_url_film(d, query):
     ms = d.search_movie(query)
     m = d.get_movie(ms[0].movieID)
+    1/0
     return m['cover url']
 
 def already_exists(query, outdir):
@@ -176,13 +179,14 @@ def main(infile, outdir, d, kind):
         elif d is None:
             print outname
         else:
-            try:
-                find_and_download_image(d, query, outname, outdir, kind)
-            except Exception, e:
-                print query
-                print e.__str__()
-                print '    BUGGIN OUT - might work next time'
-                time.sleep(2)
+            find_and_download_image(d, query, outname, outdir, kind)
+            # try:
+            #     find_and_download_image(d, query, outname, outdir, kind)
+            # except Exception, e:
+            #     print query
+            #     print e.__str__()
+            #     print '    BUGGIN OUT - might work next time'
+            #     time.sleep(2)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -197,7 +201,9 @@ if __name__ == '__main__':
     if not args.all and not os.path.exists(outdir):
         os.mkdir(outdir)
     if args.type == "album" and not args.c:
-        d = dicogs_auth()
+        # d = dicogs_auth()
+        # n.b. personal access token is from https://www.discogs.com/settings/developers
+        d = discogs_client.Client('ExampleApplication/0.1', user_token="EplUEdOolUjkmEqeTsNBlufZnXzjyLntDOCfRpkm")
     elif args.type == "book" and not args.c:
         d = goodreads_auth()
     elif args.type == "film" and not args.c:
