@@ -104,8 +104,11 @@ def get_im_url_book(d, query, page=1, search_field='all'):
 
 def get_im_url_film(d, query):
     ms = d.search_movie(query)
+    if not ms:
+        return None
     m = d.get_movie(ms[0].movieID)
-    1/0
+    # 1/0
+    # return m['full-size cover url']
     return m['cover url']
 
 def already_exists(query, outdir):
@@ -118,7 +121,7 @@ def find_and_download_image(d, query, outname, outdir, kind):
         im_url = get_im_url_film(d, query)
     elif kind == "book":
         im_url = get_im_url_book(d, query)
-    if im_url is None:
+    if im_url is None or (type(im_url) is list and len(im_url) == 0):
         print query
         print '    NOT FOUND'
         return
