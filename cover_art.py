@@ -102,14 +102,23 @@ def get_im_url_book(d, query, page=1, search_field='all'):
     q = max(qs[:4], key=lambda q: int(q.text_reviews_count))
     return q.image_url
 
-def get_im_url_film(d, query):
+def get_film(d, query):
     ms = d.search_movie(query)
     if not ms:
         return None
-    m = d.get_movie(ms[0].movieID)
-    # 1/0
+    return d.get_movie(ms[0].movieID)
+    
+def get_im_url_film(d, query):
+    m = get_film(d, query)
     # return m['full-size cover url']
     return m['cover url']
+
+def get_film_info(d, query):
+    m = get_film(d, query)
+    directors = ', '.join([x['name'] for x in m['director']])
+    year = m['year']
+    title = m['title']
+    return title, directors, year
 
 def already_exists(query, outdir):
     return any([os.path.splitext(x)[0] == query for x in os.listdir(outdir)])
@@ -133,6 +142,35 @@ def find_and_download_image(d, query, outname, outdir, kind):
     print query
     print '    Saved {0}'.format(outfile)
 
+def get_album_info(line):
+    ps = line.split("'s")
+    artist = ps[0].strip()
+    album = ps[1].strip()
+    album, year = album.split(' (')
+    year = year.replace(')', '').strip()
+    album = album.strip()
+    return artist, album, year
+
+def get_book_info(line):
+    ps = line.split("'s")
+    artist = ps[0].strip()
+    album = ps[1].strip()
+    # album, year = album.split(' (')
+    # year = year.replace(')', '').strip()
+    # album = album.strip()
+    year = '?'
+    return artist, album, year
+
+def print_info(d, query, kind, i):
+    if kind == "film":
+        info = get_film_info(d, query)
+    elif kind == "album":
+        info = get_album_info(query)
+    elif kind == "book":
+        info = get_book_info(query)
+    if len(info) == 3:
+        print """-    \n    pos: {}\n    artist: "{}"\n    album: "{}"\n    year: {}""".format(i+1, info[0], info[1].replace('"',''), info[2])
+
 def imdb_auth():
     return IMDb('http')
 
@@ -154,13 +192,14 @@ def dicogs_auth(verifier=None):
     me = d.identity()
     return d
 
+MIN_LENGTH = 3 # was at 6?
 def parse(content):
     lines = []
     for line in content.split('\n'):
         if line.startswith('    '): # skip comments on albums
             continue
         line = line.strip()
-        if not line.startswith('#') and len(line) > 6: # skip headers
+        if not line.startswith('#') and len(line) >= MIN_LENGTH: # skip headers
             lines.append(line)
     return lines
 
@@ -169,13 +208,16 @@ def load(infile):
         out = unidecode.unidecode(f.read())
         return out.split('-----')[0] # keep everything before -----
 
-def main(infile, outdir, d, kind):
+def main(infile, outdir, d, kind, get_info):
     lines = parse(load(infile))
-    for line in lines:
+    for i, line in enumerate(lines):
         if kind != "film":
             query = clean_query(line)
         else:
             query = line
+        if get_info and d is not None:
+            print_info(d, line, kind, i)
+            continue
         outname = make_filename(query)
         if already_exists(outname, outdir):
             pass
@@ -194,15 +236,19 @@ def main(infile, outdir, d, kind):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', type=str, required=True, help='infile or indir')
-    parser.add_argument('-o', type=str, required=True, help='outdir')
+    parser.add_argument('-o', type=str, help='outdir')
     parser.add_argument('--type', type=str, default="album", choices=("album", "film", "book"), help='type of image to search for')
+    parser.add_argument('--get_info', action='store_true', help='print info (no images saved)')
     parser.add_argument('-c', action='store_true', default=False, help='check images remaining')
     parser.add_argument('--all', action='store_true', default=False, help='download all')
     args = parser.parse_args()
     infile = os.path.abspath(args.i)
-    outdir = os.path.abspath(args.o)
-    if not args.all and not os.path.exists(outdir):
-        os.mkdir(outdir)
+    if not args.get_info:
+        outdir = os.path.abspath(args.o)
+        if not args.all and not os.path.exists(outdir):
+            os.mkdir(outdir)
+    else:
+        outdir = None
     if args.type == "album" and not args.c:
         # d = dicogs_auth()
         # n.b. personal access token is from https://www.discogs.com/settings/developers
@@ -217,10 +263,13 @@ if __name__ == '__main__':
         indir = infile
         for infile in glob.glob(os.path.join(indir, args.type + 's_*.txt')):
             yr = os.path.splitext(infile)[0].split('_')[2]
-            od = os.path.join(outdir, yr)
-            if not os.path.exists(od):
-                os.mkdir(od)
-            print infile, od
-            main(infile, od, d, args.type)
+            if not args.get_info:
+                od = os.path.join(outdir, yr)
+                if not os.path.exists(od):
+                    os.mkdir(od)
+                print infile, od
+            else:
+                od = None
+            main(infile, od, d, args.type, args.get_info)
     else:
-        main(infile, outdir, d, args.type)
+        main(infile, outdir, d, args.type, args.get_info)

@@ -33,6 +33,10 @@ __List albums with missing cover art__:
 
 `python cover_art.py -i lists/ -o . --all -c --type album`
 
+__Print info only (no images)__:
+
+`python cover_art.py -i lists/albums_2007.txt --type album --get_info`
+
 This won't work perfectly, but it's a start!
 
 ## Requirements
