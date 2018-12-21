@@ -113,13 +113,6 @@ def get_im_url_film(d, query):
     # return m['full-size cover url']
     return m['cover url']
 
-def get_film_info(d, query):
-    m = get_film(d, query)
-    directors = ', '.join([x['name'] for x in m['director']])
-    year = m['year']
-    title = m['title']
-    return title, directors, year
-
 def already_exists(query, outdir):
     return any([os.path.splitext(x)[0] == query for x in os.listdir(outdir)])
 
@@ -141,6 +134,13 @@ def find_and_download_image(d, query, outname, outdir, kind):
     save_image(im_url, d, outfile)
     print query
     print '    Saved {0}'.format(outfile)
+
+def get_film_info(d, query):
+    m = get_film(d, query)
+    directors = ', '.join([x['name'] for x in m['director']])
+    year = m['year']
+    title = m['title']
+    return directors, title, year
 
 def get_album_info(line):
     ps = line.split("'s")
