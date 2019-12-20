@@ -20,7 +20,7 @@ def save_image_album(im_url, d, outfile):
         'Accept-Encoding': 'gzip',
         'User-Agent': d.user_agent,
     }
-    urllib.urlretrieve(im_url, outfile)
+    urllib.request.urlretrieve(im_url, outfile)
     # content, status_code = d._fetcher.fetch(d, 'GET', im_url, data=None, headers=headers)
     # if 200 <= status_code < 300:
     #     with open(outfile, 'w') as f:
@@ -32,7 +32,7 @@ def save_image_album(im_url, d, outfile):
 def save_image(im_url, d, outfile):
     if hasattr(d, 'user_agent'):
         return save_image_album(im_url, d, outfile)
-    urlObj = urllib.urlopen(im_url)
+    urlObj = urllib.request.urlopen(im_url)
     imageData = urlObj.read()
     urlObj.close()
     with open(outfile, 'wb') as f:
@@ -48,7 +48,7 @@ def clean_query(query):
         output: Philip Glass - Solo Piano
     """
     query = query.strip()
-    query = query.translate(None, '*~#?!') # remove legend symbols
+    query = query.translate('*~#?!') # remove legend symbols
     query = query.replace("[]", "") # leftover from removing legend symbols
     query = query.replace("'s ", " - ")
     query = query.replace('"', "") # remove quotes
@@ -124,16 +124,16 @@ def find_and_download_image(d, query, outname, outdir, kind):
     elif kind == "book":
         im_url = get_im_url_book(d, query)
     if im_url is None or (type(im_url) is list and len(im_url) == 0):
-        print query
-        print '    NOT FOUND'
+        print(query)
+        print('    NOT FOUND')
         return
     ext = os.path.splitext(im_url)[1]
     ext = ext.replace('jpg', 'jpeg')
     # ext = '.png'
     outfile = os.path.join(outdir, outname + ext)
     save_image(im_url, d, outfile)
-    print query
-    print '    Saved {0}'.format(outfile)
+    print(query)
+    print('    Saved {0}'.format(outfile))
 
 def get_film_info(d, query):
     m = get_film(d, query)
@@ -169,7 +169,7 @@ def print_info(d, query, kind, i):
     elif kind == "book":
         info = get_book_info(query)
     if len(info) == 3:
-        print """-    \n    pos: {}\n    artist: "{}"\n    album: "{}"\n    year: {}""".format(i+1, info[0], info[1].replace('"',''), info[2])
+        print("""-    \n    pos: {}\n    artist: "{}"\n    album: "{}"\n    year: {}""".format(i+1, info[0], info[1].replace('"',''), info[2]))
 
 def imdb_auth():
     return IMDb('http')
@@ -182,7 +182,7 @@ def dicogs_auth(verifier=None):
     d.set_consumer_key(DISCOGS_CONSUMER_KEY, DISCOGS_CONSUMER_SECRET)
     request_token, request_secret, url = d.get_authorize_url()
     if not verifier:
-        print url
+        print(url)
         if raw_input('Go to this url? ').strip().lower() != 'n':
             webbrowser.open_new_tab(url)
         else:
@@ -222,7 +222,7 @@ def main(infile, outdir, d, kind, get_info):
         if already_exists(outname, outdir):
             pass
         elif d is None:
-            print outname
+            print(outname)
         else:
             find_and_download_image(d, query, outname, outdir, kind)
             # try:
@@ -267,7 +267,7 @@ if __name__ == '__main__':
                 od = os.path.join(outdir, yr)
                 if not os.path.exists(od):
                     os.mkdir(od)
-                print infile, od
+                print(infile, od)
             else:
                 od = None
             main(infile, od, d, args.type, args.get_info)

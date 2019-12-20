@@ -19,6 +19,8 @@ The idea is that you've got a bunch of files each with a list of albums/films/bo
 
 ## Usage
 
+(Note: use with python3)
+
 By default, we download music albums. Use the `--type` option to toggle between `film`, `album`, or `book`.
 
 __Download albums from all files in `lists/` directory__:
