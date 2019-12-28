@@ -43,6 +43,8 @@ This won't work perfectly, but it's a start!
 
 ## Requirements
 
+Python3.
+
 For films, we need IMDBpy. For books, we need the Goodreads API with the associated developer keys. For albums, we need the [Discogs API](https://www.discogs.com/settings/developers) and developer keys.
 
 Save all developer keys as environment variables for your consumer key and consumer secret keys. For example, you can create a local file called `.env` with the following:
