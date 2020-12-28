@@ -1,9 +1,10 @@
 import os
+import json
 import time
 import glob
 import urllib
 import argparse
-import unidecode
+# import unidecode
 import webbrowser
 import collections
 import discogs_client
@@ -20,7 +21,8 @@ def save_image_album(im_url, d, outfile):
         'Accept-Encoding': 'gzip',
         'User-Agent': d.user_agent,
     }
-    urllib.request.urlretrieve(im_url, outfile)
+    # urllib.request.urlretrieve(im_url, outfile)
+    urllib.urlretrieve(im_url, outfile)
     # content, status_code = d._fetcher.fetch(d, 'GET', im_url, data=None, headers=headers)
     # if 200 <= status_code < 300:
     #     with open(outfile, 'w') as f:
@@ -83,10 +85,25 @@ def get_im_url_album(d, query):
             #     return r.thumb
     return None
 
+def get_isbn(query, page):
+    values = {'q': query, 'page': page}
+    # OR: values = {'title': title, 'author': author, 'page': page}
+    data = urllib.parse.urlencode(values)
+    with urllib.request.urlopen("http://openlibrary.org/search.json?" + data) as response:
+        resp = json.loads(response.read().decode())
+        res = resp['docs']
+        if len(res) == 0:
+            return None
+        return res[0]['isbn'][0]
+
 def get_im_url_book(d, query, page=1, search_field='all'):
-    """
-    source: https://github.com/sefakilic/goodreads/blob/master/goodreads/client.py
-    """
+    # use open library
+    isbn = get_isbn(query, page)
+    print((query, isbn))
+    return 'http://covers.openlibrary.org/b/isbn/{}-M.jpg'.format(isbn)
+
+    # goodreads (now deprecated:)
+    # source: https://github.com/sefakilic/goodreads/blob/master/goodreads/client.py
     resp = d.request("search/index.xml",
         {'q': query, 'page': page, 'search[field]': search_field})
     res = resp['search']['results']
@@ -175,7 +192,8 @@ def imdb_auth():
     return IMDb('http')
 
 def goodreads_auth():
-    return gr_client.GoodreadsClient(GOODREADS_KEY, GOODREADS_SECRET)
+    return {'dummy': 'dummy'}
+    # return gr_client.GoodreadsClient(GOODREADS_KEY, GOODREADS_SECRET)
 
 def dicogs_auth(verifier=None):
     d = discogs_client.Client('ExampleApplication/0.1')
@@ -205,7 +223,8 @@ def parse(content):
 
 def load(infile):
     with open(infile) as f:
-        out = unidecode.unidecode(f.read())
+        # out = unidecode.unidecode(f.read())
+        out = f.read()
         return out.split('-----')[0] # keep everything before -----
 
 def main(infile, outdir, d, kind, get_info):
