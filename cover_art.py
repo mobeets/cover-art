@@ -2,6 +2,7 @@ import os
 import json
 import time
 import glob
+from pathlib import Path
 import urllib
 import argparse
 # import unidecode
@@ -41,7 +42,7 @@ def save_image(im_url, d, outfile):
         f.write(imageData)
 
 def make_filename(query):
-    return query.replace('.', '_').replace('/', '_').replace(':', '-')
+    return query.replace('.', '_').replace('/', '_').replace(':', '_')
 
 def clean_query(query):
     """
@@ -133,7 +134,8 @@ def get_im_url_film(d, query):
 def already_exists(query, outdir):
     return any([os.path.splitext(x)[0] == query for x in os.listdir(outdir)])
 
-def find_and_download_image(d, query, outname, outdir, kind):
+def find_and_download_image(d, query, outname, outdir, kind, always_touch_file=True):
+    outfile = os.path.join(outdir, outname + ext)
     if kind == "album":
         im_url = get_im_url_album(d, query)
     elif kind == "film":
@@ -143,11 +145,12 @@ def find_and_download_image(d, query, outname, outdir, kind):
     if im_url is None or (type(im_url) is list and len(im_url) == 0):
         print(query)
         print('    NOT FOUND')
+        if always_touch_file:
+            Path(outfile).touch()
         return
     ext = os.path.splitext(im_url)[1]
     ext = ext.replace('jpg', 'jpeg')
-    # ext = '.png'
-    outfile = os.path.join(outdir, outname + ext)
+    # ext = '.png'    
     save_image(im_url, d, outfile)
     print(query)
     print('    Saved {0}'.format(outfile))
@@ -227,7 +230,7 @@ def load(infile):
         out = f.read()
         return out.split('-----')[0] # keep everything before -----
 
-def main(infile, outdir, d, kind, get_info):
+def main(infile, outdir, d, kind, get_info, always_touch_file=True):
     lines = parse(load(infile))
     for i, line in enumerate(lines):
         if kind != "film":
@@ -243,7 +246,7 @@ def main(infile, outdir, d, kind, get_info):
         elif d is None:
             print(outname)
         else:
-            find_and_download_image(d, query, outname, outdir, kind)
+            find_and_download_image(d, query, outname, outdir, kind, always_touch_file)
             # try:
             #     find_and_download_image(d, query, outname, outdir, kind)
             # except Exception, e:
