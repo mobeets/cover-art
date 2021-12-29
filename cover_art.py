@@ -10,7 +10,7 @@ import webbrowser
 import collections
 import discogs_client
 from imdb import IMDb
-from goodreads import client as gr_client
+# from goodreads import client as gr_client
 
 DISCOGS_CONSUMER_KEY = os.environ['DISCOGS_CONSUMER_KEY']
 DISCOGS_CONSUMER_SECRET = os.environ['DISCOGS_CONSUMER_SECRET']
@@ -22,8 +22,8 @@ def save_image_album(im_url, d, outfile):
         'Accept-Encoding': 'gzip',
         'User-Agent': d.user_agent,
     }
-    # urllib.request.urlretrieve(im_url, outfile)
-    urllib.urlretrieve(im_url, outfile)
+    urllib.request.urlretrieve(im_url, outfile)
+    # urllib.urlretrieve(im_url, outfile)
     # content, status_code = d._fetcher.fetch(d, 'GET', im_url, data=None, headers=headers)
     # if 200 <= status_code < 300:
     #     with open(outfile, 'w') as f:
@@ -135,7 +135,6 @@ def already_exists(query, outdir):
     return any([os.path.splitext(x)[0] == query for x in os.listdir(outdir)])
 
 def find_and_download_image(d, query, outname, outdir, kind, always_touch_file=True):
-    outfile = os.path.join(outdir, outname + ext)
     if kind == "album":
         im_url = get_im_url_album(d, query)
     elif kind == "film":
@@ -146,11 +145,16 @@ def find_and_download_image(d, query, outname, outdir, kind, always_touch_file=T
         print(query)
         print('    NOT FOUND')
         if always_touch_file:
+            outfile = os.path.join(outdir, outname + '.jpeg')
             Path(outfile).touch()
         return
     ext = os.path.splitext(im_url)[1]
     ext = ext.replace('jpg', 'jpeg')
-    # ext = '.png'    
+    # ext = '.png'
+    outfile = os.path.join(outdir, outname + ext)
+    print(outfile)
+    return
+    # 2021: just used the output file names and did this manually
     save_image(im_url, d, outfile)
     print(query)
     print('    Saved {0}'.format(outfile))
