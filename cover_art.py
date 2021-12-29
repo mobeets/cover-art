@@ -153,8 +153,7 @@ def find_and_download_image(d, query, outname, outdir, kind, always_touch_file=T
     # ext = '.png'
     outfile = os.path.join(outdir, outname + ext)
     print(outfile)
-    return
-    # 2021: just used the output file names and did this manually
+    # 2021 albums/books: just used the output file names and did this manually
     save_image(im_url, d, outfile)
     print(query)
     print('    Saved {0}'.format(outfile))
